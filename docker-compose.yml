@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  go:
+    image: ${GO_IMAGE_NAME}
+    container_name: ${GO_CONTAINER_NAME}
+    build:
+      context: ./go
+      dockerfile: Dockerfile
+    volumes:
+      - go_data:/app
+    networks:
+      test_go_and_redis:
+        ipv4_address: ${GO_IP}
+    ports:
+      - ${LOCAL_LOOPBACK_ADDRESS}:${GO_PORT}:${GO_PORT}
+    environment:
+      - GO_PORT=${GO_PORT}
+      - REDIS_IP=${REDIS_IP}
+      - REDIS_PORT=${REDIS_PORT}
+    stdin_open: true
+    tty: true
+  redis:
+    image: ${REDIS_IMAGE_NAME}
+    container_name: ${REDIS_CONTAINER_NAME}
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+    volumes:
+      - redis_data:/data
+    networks:
+      test_go_and_redis:
+        ipv4_address: ${REDIS_IP}
+    expose:
+      - ${REDIS_PORT}
+    stdin_open: true
+    tty: true
+
+volumes:
+  go_data:
+    name: ${GO_VOLUME_NAME}
+  redis_data:
+    name: ${REDIS_VOLUME_NAME}
+
+networks:
+  test_go_and_redis:
+    name: ${NETWORK_NAME}
+    ipam:
+      driver: default
+      config:
+        - subnet: ${SUBNET_CIDR}
